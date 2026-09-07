@@ -1,36 +1,36 @@
 name: yes daily commit
 on:
   schedule:
-    - cron: '0 0 * * *'  # Every day at midnight UTC to runs every 7-8 min set cron to '*/1 * * * *'
+    - cron: '0 0 * * *'  # daily at midnight UTC
+  workflow_dispatch:      # lets you manually trigger it to test
 
 jobs:
   commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # needed if your repo has restricted default token perms
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4   # v2 is deprecated
       with:
-        ref: main 
+        ref: main
 
     - name: Create file and commit
       run: |
         FILE="commit_number.md"
         if [ ! -f "$FILE" ]; then
           echo "Hello, my name is yes" > "$FILE"
-          echo "commit number: " >> "$FILE"
+          echo "commit number: 0" >> "$FILE"
         else
-          CURRENT_COUNT=$(grep -oP 'commit number: \K\d+' "$FILE")
-          if [ -z "$CURRENT_COUNT" ]; then
-            CURRENT_COUNT=0
-          fi
+          CURRENT_COUNT=$(grep -oP 'commit number: \K\d+' "$FILE" || echo 0)
           NEXT_COUNT=$((CURRENT_COUNT + 1))
-          sed -i "/commit number: /c\commit number: $NEXT_COUNT" "$FILE"
+          sed -i "s/commit number: .*/commit number: $NEXT_COUNT/" "$FILE"
         fi
         git config --global user.name "yes"
         git config --global user.email "yes@gmail.com"
         git add "$FILE"
         git commit -m "Hello, my name is yes nice to meet you"
-        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/beesou777/mean-commit.git
+        git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
